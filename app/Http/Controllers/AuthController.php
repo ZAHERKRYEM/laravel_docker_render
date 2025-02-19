@@ -46,7 +46,7 @@ class AuthController extends Controller
         }
 
         // إنشاء التوكنات
-        $accesstoken = 'test';
+        $accesstoken = JWTAuth::fromUser($user);
        
 
         return response()->json([
