@@ -12,10 +12,11 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
-
+use App\Http\Resources\AuthResource;
+use App\Http\Resources\ProfileResource;
 class AuthController extends Controller
 {
-    // User registration
+    
     public function register(Request $request)
     {
         $request->validate([
@@ -30,7 +31,7 @@ class AuthController extends Controller
         $profileData = $request->input('profile');
         $isStaff = $userData['is_staff'] ?? false;
 
-        // إنشاء المستخدم
+       
         $user = User::create([
             'username' => $userData['username'],
             'email' => $userData['email'],
@@ -38,25 +39,25 @@ class AuthController extends Controller
             'is_staff' => $isStaff
         ]);
 
-        // إنشاء الملف الشخصي كـ Teacher أو Student
+       
         if ($isStaff) {
             $profile = Teacher::create(array_merge($profileData, ['user_id' => $user->id]));
         } else {
             $profile = Student::create(array_merge($profileData, ['user_id' => $user->id]));
         }
 
-        // إنشاء التوكنات
+     
         $accesstoken = JWTAuth::fromUser($user);
        
 
         return response()->json([
             "status" => true,
             "data" => [
-                "user" => $user,
-                "profile" => $profile,
+                "user" => new AuthResource($user),
+                "profile" => new ProfileResource($profile) ,
                 "tokens" => [
-                    "access" => $accesstoken,
-                    "refresh" => $accesstoken
+                    "refresh" => $accesstoken,
+                    "access" => $accesstoken
                 ]
             ],
             "message" => "User and profile created successfully",
@@ -80,7 +81,7 @@ class AuthController extends Controller
 
         $user = auth()->user();
 
-        // جلب بيانات الملف الشخصي
+       
         $profile = null;
         if ($user->is_staff) {
             $profile = Teacher::where('user_id', $user->id)->first();
@@ -106,8 +107,8 @@ class AuthController extends Controller
                     "student_id" => $profile->student_id ?? null
                 ],
                 "tokens" => [
-                    "access" => $token,
-                    "refresh" => $token
+                    "refresh" => $token,
+                    "access" => $token
                 ]
             ],
             "message" => "Login successful",
@@ -130,15 +131,16 @@ class AuthController extends Controller
     }
 }
 
-    public function me()
-    {
-        return response()->json(auth()->user());
-    }
 
     public function logout()
     {
         auth()->logout();
-        return response()->json(['message' => 'Successfully logged out']);
+        return response()->json([
+            "status" => true,
+            "data" => [],
+            'message' => 'Successfully logged out',
+            "status_code" => 205
+        ],205);
     }
 
     public function refresh(Request $request)
