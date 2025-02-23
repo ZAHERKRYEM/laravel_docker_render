@@ -43,3 +43,14 @@ Route::middleware('auth:api')->group(function () {
 
 });
 
+Route::get('test',function(){
+    return response()->json([
+        
+            "title" => "The best IT solution",
+            "subtitle"=> "about us",
+            "experience_years"=> 20,
+            "description"=> "We provide the best IT solutions."
+        
+        
+    ]);
+});
